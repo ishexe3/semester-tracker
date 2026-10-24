@@ -1,0 +1,1239 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Study Dashboard</title>
+    <link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0f172a">
+</head>
+<body>
+  <main class="dashboard">
+
+    <header class="hero">
+      <p class="eyebrow">STUDENT COMMAND CENTER</p>
+      <h1>Semester 03 Tracker</h1>
+      <p class="subtitle">
+        Stay consistent. Track every topic. Aim for 10 CGPA.
+      </p>
+    </header>
+
+    <section class="stats">
+      <article class="stat-card">
+        <p class="stat-label">Subjects</p>
+        <h2>6</h2>
+        <p class="stat-note">This semester</p>
+      </article>
+
+      <article class="stat-card">
+        <p class="stat-label">Target CGPA</p>
+        <h2>10.0</h2>
+        <p class="stat-note">Your goal</p>
+      </article>
+
+      <article class="stat-card">
+        <p class="stat-label">Daily Study</p>
+        <h2>60 min</h2>
+        <p class="stat-note">Build the habit</p>
+      </article>
+    </section>
+
+<section class="progress-overview">
+  <h2>Semester Progress</h2>
+
+  <div class="progress-info">
+    <span>Overall completion</span>
+    <strong id="overall-percent">0%</strong>
+  </div>
+
+  <div class="progress-track">
+    <div id="overall-bar" class="progress-fill"></div>
+  </div>
+
+  <p id="progress-summary">0 of 6 subjects completed</p>
+</section>
+
+    
+<section class="subjects-section">
+    
+  <h2 class="section-title">Your Semester 03 Syllabus</h2>
+
+<div class="tracker-controls">
+  <input
+    id="topic-search"
+    type="search"
+    placeholder="Search subjects, units or topics..."
+    aria-label="Search syllabus"
+  >
+
+  <div class="control-buttons">
+    <button type="button" id="expand-all">Expand all</button>
+    <button type="button" id="collapse-all">Collapse all</button>
+    <button type="button" id="export-progress">Export backup</button>
+    <button type="button" id="import-progress">Import backup</button>
+    <button type="button" id="reset-progress" class="danger-button">
+      Reset progress
+    </button>
+  </div>
+  <input
+  type="file"
+  id="import-file"
+  accept=".json,application/json"
+  hidden
+>
+</div>
+
+  <p class="subtitle">
+    Track every topic, unit and practical task.
+  </p>
+
+  <div id="subject-grid" class="subject-grid"></div>
+</section>
+
+<section class="subjects-section">
+  <h2 class="section-title">Practical & Academic Checklist</h2>
+  <div id="lab-grid" class="subject-grid"></div>
+</section>
+
+    <footer class="footer">
+      Built by Ishan · One topic at a time.
+    </footer>
+
+  </main>
+
+<script>
+ 
+const STORAGE_KEY = "ishanFullSyllabusProgressV1";
+
+// Each subject contains units, and each unit contains topics.
+const subjects = [
+  {
+    id: "math",
+    name: "Advanced Engineering Mathematics",
+    code: "3CS1-01",
+    units: [
+      {
+        name: "Unit 1 — Probability & Statistics I",
+        topics: [
+          "Probability basics and distributions",
+          "Random variables and probability distributions",
+          "Mathematical expectation and moments",
+          "Moment-generating functions",
+          "Standard probability distributions"
+        ]
+      },
+      {
+        name: "Unit 2 — Probability & Statistics II",
+        topics: [
+          "Correlation and regression",
+          "Joint distributions and statistical measures",
+          "Statistical applications and problem practice"
+        ]
+      },
+      {
+        name: "Unit 3 — Optimization I",
+        topics: [
+          "Unconstrained optimization",
+          "Constrained optimization",
+          "Lagrange multipliers",
+          "KKT conditions"
+        ]
+      },
+      {
+        name: "Unit 4 — Optimization II",
+        topics: [
+          "Linear programming formulation",
+          "Simplex method",
+          "Big-M and two-phase methods",
+          "Duality",
+          "Transportation problems",
+          "Assignment problems"
+        ]
+      },
+      {
+        name: "Unit 5 — Numerical Methods",
+        topics: [
+          "Interpolation formulas",
+          "Numerical differentiation",
+          "Numerical integration",
+          "Euler and modified Euler methods",
+          "Runge–Kutta fourth-order method",
+          "Milne's method"
+        ]
+      }
+    ]
+  },
+  {
+    id: "digital",
+    name: "Digital Electronics",
+    code: "3CS4-02",
+    units: [
+      {
+        name: "Unit 1 — Foundations",
+        topics: [
+          "Digital systems introduction",
+          "Number systems and conversions",
+          "Binary codes",
+          "Logic gates"
+        ]
+      },
+      {
+        name: "Unit 2 — Boolean Algebra",
+        topics: [
+          "Boolean laws and theorems",
+          "Canonical forms",
+          "Karnaugh maps",
+          "Tabulation method / Quine–McCluskey"
+        ]
+      },
+      {
+        name: "Unit 3 — Combinational Circuits",
+        topics: [
+          "Combinational circuit design",
+          "Half and full adders",
+          "Half and full subtractors",
+          "Multiplexers and demultiplexers",
+          "Encoders and decoders",
+          "Magnitude comparators"
+        ]
+      },
+      {
+        name: "Unit 4 — Sequential Circuits",
+        topics: [
+          "Latches and flip-flops",
+          "Counters",
+          "Shift registers",
+          "Finite-state machines and ASM charts",
+          "Pulse-train generators",
+          "Pseudo-random sequence generators"
+        ]
+      },
+      {
+        name: "Unit 5 — Logic Families",
+        topics: [
+          "TTL characteristics",
+          "ECL characteristics",
+          "CMOS characteristics",
+          "Compare logic families"
+        ]
+      }
+    ]
+  },
+  {
+    id: "dsa",
+    name: "Data Structures & Algorithms",
+    code: "3CS4-03",
+    units: [
+      {
+        name: "Unit 1 — Analysis",
+        topics: [
+          "Algorithm design basics",
+          "Time and space complexity",
+          "Asymptotic notation: O, Ω and Θ",
+          "Best, average and worst-case analysis"
+        ]
+      },
+      {
+        name: "Unit 2 — Linear Structures",
+        topics: [
+          "Arrays and operations",
+          "Stacks and applications",
+          "Queues and circular queues",
+          "Singly, doubly and circular linked lists"
+        ]
+      },
+      {
+        name: "Unit 3 — Searching & Sorting",
+        topics: [
+          "Linear and binary search",
+          "Bubble, selection and insertion sort",
+          "Merge sort",
+          "Quick sort",
+          "Compare time complexities"
+        ]
+      },
+      {
+        name: "Unit 4 — Trees",
+        topics: [
+          "Tree terminology and traversals",
+          "Binary search trees",
+          "Insertion, deletion and searching in BST",
+          "AVL trees and rotations"
+        ]
+      },
+      {
+        name: "Unit 5 — Graphs & Hashing",
+        topics: [
+          "Graph representations",
+          "Breadth-first search (BFS)",
+          "Depth-first search (DFS)",
+          "Prim's minimum spanning tree algorithm",
+          "Kruskal's minimum spanning tree algorithm",
+          "Dijkstra's shortest-path algorithm",
+          "Hash functions and collision resolution"
+        ]
+      }
+    ]
+  },
+  {
+    id: "cpp",
+    name: "OOP Using C++",
+    code: "3CS4-04",
+    units: [
+      {
+        name: "Unit 1 — C++ Foundations",
+        topics: [
+          "OOP concepts and principles",
+          "C++ program structure and basics",
+          "Functions, references and pointers",
+          "Classes and objects"
+        ]
+      },
+      {
+        name: "Unit 2 — Classes & Inheritance",
+        topics: [
+          "Constructors and destructors",
+          "Encapsulation and data hiding",
+          "Inheritance types",
+          "Access control and class relationships"
+        ]
+      },
+      {
+        name: "Unit 3 — Polymorphism",
+        topics: [
+          "Function overloading and overriding",
+          "Compile-time and run-time polymorphism",
+          "Binding",
+          "Virtual and pure virtual functions",
+          "Abstract classes"
+        ]
+      },
+      {
+        name: "Unit 4 — Operators & Exceptions",
+        topics: [
+          "Operator overloading",
+          "Exception handling: try, throw and catch",
+          "Standard and user-defined exceptions"
+        ]
+      },
+      {
+        name: "Unit 5 — Advanced C++",
+        topics: [
+          "Dynamic memory management",
+          "Templates",
+          "STL basics",
+          "Namespaces",
+          "Object-oriented design basics"
+        ]
+      }
+    ]
+  },
+  {
+    id: "se",
+    name: "Software Engineering",
+    code: "3CS4-05",
+    units: [
+      {
+        name: "Unit 1 — Process & Requirements",
+        topics: [
+          "Software engineering fundamentals",
+          "Software life-cycle models",
+          "SRS: structure and qualities",
+          "Verification and validation"
+        ]
+      },
+      {
+        name: "Unit 2 — Project Management",
+        topics: [
+          "Project planning and estimation",
+          "LOC and Function Point estimation",
+          "COCOMO model",
+          "Risk management",
+          "Scheduling and tracking"
+        ]
+      },
+      {
+        name: "Unit 3 — Requirements Analysis",
+        topics: [
+          "Requirements elicitation and analysis",
+          "Prototyping",
+          "Data Flow Diagrams (DFD)",
+          "Control Flow Diagrams (CFD)",
+          "Behavioural modelling"
+        ]
+      },
+      {
+        name: "Unit 4 — Design",
+        topics: [
+          "Software design principles",
+          "Modularity, cohesion and coupling",
+          "Data and architectural design",
+          "Procedural design",
+          "Documentation"
+        ]
+      },
+      {
+        name: "Unit 5 — Object-Oriented Analysis",
+        topics: [
+          "Object-oriented analysis and design",
+          "UML fundamentals",
+          "Use-case and class modelling",
+          "Behavioural and interaction modelling"
+        ]
+      }
+    ]
+  },
+  {
+    id: "linux",
+    name: "Linux & Shell Programming",
+    code: "3CS4-06",
+    units: [
+      {
+        name: "Unit 1 — Linux Basics",
+        topics: [
+          "Linux architecture and environment",
+          "Essential commands and utilities",
+          "File and directory operations",
+          "Permissions and processes"
+        ]
+      },
+      {
+        name: "Unit 2 — Files & System Calls",
+        topics: [
+          "Linux file system and inodes",
+          "System calls",
+          "File APIs",
+          "Directory APIs"
+        ]
+      },
+      {
+        name: "Unit 3 — Shell Basics",
+        topics: [
+          "Shell environment and syntax",
+          "Redirection",
+          "Pipes and filters",
+          "Process handling"
+        ]
+      },
+      {
+        name: "Unit 4 — Shell Scripting",
+        topics: [
+          "Variables and input/output",
+          "Conditional statements",
+          "Loops",
+          "Functions",
+          "Arrays and text processing"
+        ]
+      },
+      {
+        name: "Unit 5 — Development Tools",
+        topics: [
+          "Compile and link C/C++ programs",
+          "make and Makefiles",
+          "gdb debugging",
+          "Package management",
+          "RCS/CVS version control basics",
+          "awk"
+        ]
+      }
+    ]
+  }
+];
+
+// Practical and academic tasks are tracked separately.
+const practicals = [
+  {
+    id: "dsa-lab",
+    name: "DSA Lab",
+    code: "PRACTICAL",
+    units: [{
+      name: "Programming tasks",
+      topics: [
+        "Array operations",
+        "Singly linked list",
+        "Doubly / circular linked list",
+        "Polynomial representation and operations",
+        "Stack implementation and applications",
+        "Queue implementation",
+        "Circular queue",
+        "Priority queue and deque",
+        "Sorting programs",
+        "Tree traversals",
+        "Binary search tree operations",
+        "Graph traversal: BFS and DFS",
+        "Shortest-path / distance exercises",
+        "Minimum spanning tree exercises"
+      ]
+    }]
+  },
+  {
+    id: "cpp-lab",
+    name: "C++ Lab",
+    code: "PRACTICAL",
+    units: [{
+      name: "Programming tasks",
+      topics: [
+        "Basic C++ programs and I/O",
+        "GCD program",
+        "Tower of Hanoi",
+        "String tokenization",
+        "Complex-number class",
+        "Operator overloading",
+        "Inheritance examples",
+        "Function / class templates",
+        "Exception handling",
+        "Constructor and destructor practice"
+      ]
+    }]
+  },
+  {
+    id: "linux-lab",
+    name: "Linux & Shell Lab",
+    code: "PRACTICAL",
+    units: [{
+      name: "Command and script practice",
+      topics: [
+        "Linux commands and file operations",
+        "Shell input/output and redirection",
+        "Conditional statements",
+        "Loops",
+        "Calculator script",
+        "Fibonacci series",
+        "Prime-number check",
+        "Number-system conversions",
+        "Pattern printing",
+        "Array operations",
+        "Searching programs",
+        "Sorting programs",
+        "Functions in shell scripts",
+        "Text processing with awk"
+      ]
+    }]
+  },
+  {
+    id: "digital-lab",
+    name: "Digital Electronics Lab",
+    code: "PRACTICAL",
+    units: [{
+      name: "Circuit experiments",
+      topics: [
+        "Verify universal gates",
+        "Adder and subtractor circuits",
+        "4-bit adder/subtractor",
+        "Multiplexer experiment",
+        "BCD adder",
+        "Seven-segment display",
+        "Flip-flop experiments",
+        "Counter circuits",
+        "Shift-register experiments",
+        "ROM / PLA / FPGA overview"
+      ]
+    }]
+  },
+  {
+    id: "semester",
+    name: "Semester Requirements",
+    code: "ACADEMIC",
+    units: [{
+      name: "Don't forget",
+      topics: [
+        "Complete lab records and practical files",
+        "Revise internal-assessment topics",
+        "Solve previous-year question papers",
+        "Confirm 15-day industrial training requirement",
+        "Check SODECA / co-curricular requirements",
+        "Confirm the current exam scheme with the department"
+      ]
+    }]
+  }
+];
+
+// Load saved topic states safely.
+let savedProgress = {};
+
+try {
+  savedProgress = JSON.parse(
+    localStorage.getItem(STORAGE_KEY) || "{}"
+  );
+} catch (error) {
+  savedProgress = {};
+}
+
+// Escape topic text before inserting it into HTML.
+function escapeHTML(value) {
+  return value.replace(/[&<>"']/g, function (char) {
+    return {
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[char];
+  });
+}
+
+// Give every topic a permanent, unique ID.
+function topicId(subject, unitIndex, topicIndex) {
+  return subject.id + "-" + unitIndex + "-" + topicIndex;
+}
+
+// Build one subject card.
+function renderSubject(subject) {
+  const allTopics = subject.units.flatMap(unit => unit.topics);
+  const total = allTopics.length;
+
+  const topicHTML = subject.units.map((unit, unitIndex) => {
+    const items = unit.topics.map((topic, topicIndex) => {
+      const id = topicId(subject, unitIndex, topicIndex);
+      const checked = savedProgress[id] === true;
+
+      return `
+        <label class="topic-item ${checked ? "done" : ""}">
+          <input
+            type="checkbox"
+            data-topic="${id}"
+            ${checked ? "checked" : ""}
+          >
+          <span>${escapeHTML(topic)}</span>
+        </label>
+      `;
+    }).join("");
+
+    
+return `
+  <div class="unit-block">
+    <div class="unit-title">${escapeHTML(unit.name)}</div>
+    ${items}
+  </div>
+`;
+
+  }).join("");
+
+  return `
+    <article class="subject-card">
+      <span class="subject-number">${escapeHTML(subject.code)}</span>
+      <h3>${escapeHTML(subject.name)}</h3>
+      <p>${total} checklist items</p>
+
+      <div class="subject-progress">
+        <div class="progress-info">
+          <span>Subject completion</span>
+          <strong id="pct-${subject.id}">0%</strong>
+        </div>
+        <div class="progress-track">
+          <div
+            id="bar-${subject.id}"
+            class="progress-fill"
+          ></div>
+        </div>
+      </div>
+
+      
+<details class="topic-details" open>
+  <summary>Show or hide topics</summary>
+  <div class="topic-list">${topicHTML}</div>
+</details>
+
+    </article>
+  `;
+}
+
+// Render theory subjects and practical checklists.
+document.getElementById("subject-grid").innerHTML =
+  subjects.map(renderSubject).join("");
+
+document.getElementById("lab-grid").innerHTML =
+  practicals.map(renderSubject).join("");
+
+const allSubjects = [...subjects, ...practicals];
+
+// Calculate the number of completed topics in one subject.
+function getSubjectProgress(subject) {
+  let total = 0;
+  let completed = 0;
+
+  subject.units.forEach((unit, unitIndex) => {
+    unit.topics.forEach((topic, topicIndex) => {
+      total++;
+
+      const id = topicId(subject, unitIndex, topicIndex);
+
+      if (savedProgress[id] === true) {
+        completed++;
+      }
+    });
+  });
+
+  return {
+    total,
+    completed,
+    percent: total ? Math.round(completed / total * 100) : 0
+  };
+}
+
+// Update overall and individual subject progress.
+function updateProgress() {
+  let total = 0;
+  let completed = 0;
+
+  allSubjects.forEach(subject => {
+    const result = getSubjectProgress(subject);
+
+    total += result.total;
+    completed += result.completed;
+
+    const percentElement =
+      document.getElementById("pct-" + subject.id);
+
+    const barElement =
+      document.getElementById("bar-" + subject.id);
+
+    if (percentElement && barElement) {
+      percentElement.textContent = result.percent + "%";
+      barElement.style.width = result.percent + "%";
+    }
+  });
+
+  const overallPercent = total
+    ? Math.round(completed / total * 100)
+    : 0;
+
+  document.getElementById("overall-percent").textContent =
+    overallPercent + "%";
+
+  document.getElementById("overall-bar").style.width =
+    overallPercent + "%";
+
+  document.getElementById("progress-summary").textContent =
+    completed + " of " + total + " checklist items completed";
+}
+
+// Save a checkbox change.
+document.addEventListener("change", function (event) {
+  const checkbox = event.target;
+
+  if (!checkbox.matches("input[data-topic]")) {
+    return;
+  }
+
+  savedProgress[checkbox.dataset.topic] = checkbox.checked;
+
+  try {
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(savedProgress)
+    );
+  } catch (error) {
+    console.error("Could not save progress:", error);
+  }
+
+  checkbox.closest(".topic-item").classList.toggle(
+    "done",
+    checkbox.checked
+  );
+
+  updateProgress();
+
+});
+
+// Calculate the initial progress on page load.
+updateProgress();
+
+  // 1. SEARCH: filter subjects, units and topics
+  const searchInput = document.getElementById("topic-search");
+
+  searchInput.addEventListener("input", function () {
+    const query = searchInput.value.trim().toLowerCase();
+
+    document.querySelectorAll(".subject-card").forEach(function (card) {
+      const title = card.querySelector("h3").textContent.toLowerCase();
+      const code = card.querySelector(".subject-number").textContent.toLowerCase();
+      const subjectMatches =
+        query === "" || title.includes(query) || code.includes(query);
+
+      let cardHasMatch = subjectMatches;
+
+      card.querySelectorAll(".unit-block").forEach(function (unit) {
+        const unitTitle =
+          unit.querySelector(".unit-title").textContent.toLowerCase();
+
+        const topicItems = unit.querySelectorAll(".topic-item");
+
+        let unitHasMatch = false;
+
+        topicItems.forEach(function (item) {
+          const topicText = item.textContent.toLowerCase();
+
+          const matches =
+            query === "" ||
+            subjectMatches ||
+            unitTitle.includes(query) ||
+            topicText.includes(query);
+
+          item.hidden = !matches;
+
+          if (matches) {
+            unitHasMatch = true;
+          }
+        });
+
+        unit.hidden =
+          query !== "" && !subjectMatches &&
+          !unitTitle.includes(query) && !unitHasMatch;
+
+        if (!unit.hidden) {
+          cardHasMatch = true;
+        }
+      });
+
+      card.hidden = query !== "" && !cardHasMatch;
+
+      // Open a matching card to make search results easier to see.
+      if (query !== "" && !card.hidden) {
+        const details = card.querySelector(".topic-details");
+        if (details) details.open = true;
+      }
+    });
+  });
+
+  // 2. EXPAND ALL topic lists
+  document.getElementById("expand-all").addEventListener("click", function () {
+    document.querySelectorAll(".topic-details").forEach(function (details) {
+      details.open = true;
+    });
+  });
+
+  // 3. COLLAPSE ALL topic lists
+  document.getElementById("collapse-all").addEventListener("click", function () {
+    document.querySelectorAll(".topic-details").forEach(function (details) {
+      details.open = false;
+    });
+  });
+
+  // 4. EXPORT a backup of saved progress
+  document.getElementById("export-progress").addEventListener("click", function () {
+    const backup = {
+      app: "Ishan Semester 03 Tracker",
+      exportedAt: new Date().toISOString(),
+      progress: savedProgress
+    };
+
+    const file = new Blob(
+      [JSON.stringify(backup, null, 2)],
+      { type: "application/json" }
+    );
+
+    const downloadURL = URL.createObjectURL(file);
+    const link = document.createElement("a");
+
+    link.href = downloadURL;
+    link.download = "ishan-semester-03-progress.json";
+
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+
+    URL.revokeObjectURL(downloadURL);
+  });
+
+  // 5. RESET only after explicit confirmation
+  
+document.getElementById("reset-progress").addEventListener("click", () => {
+  const confirmed = window.confirm(
+    "Are you sure you want to reset ALL your study progress? This cannot be undone unless you have a backup."
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  localStorage.removeItem(STORAGE_KEY);
+  window.location.reload();
+});
+
+
+document.getElementById("import-progress").addEventListener("click", () => {
+  document.getElementById("import-file").click();
+});
+
+document.getElementById("import-file").addEventListener("change", async (event) => {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  try {
+    const backup = JSON.parse(await file.text());
+
+    if (
+      !backup ||
+      backup.app !== "Ishan Semester 03 Tracker" ||
+      !backup.progress ||
+      typeof backup.progress !== "object" ||
+      Array.isArray(backup.progress)
+    ) {
+      throw new Error("This is not a valid tracker backup.");
+    }
+
+    // Accept only topic IDs that exist in the current tracker.
+    const knownTopicIds = new Set();
+
+    [...subjects, ...practicals].forEach((subject) => {
+      subject.units.forEach((unit, unitIndex) => {
+        unit.topics.forEach((topic, topicIndex) => {
+          knownTopicIds.add(topicId(subject, unitIndex, topicIndex));
+        });
+      });
+    });
+
+    const restoredProgress = {};
+
+    Object.entries(backup.progress).forEach(([id, value]) => {
+      if (knownTopicIds.has(id) && typeof value === "boolean") {
+        restoredProgress[id] = value;
+      }
+    });
+
+    if (Object.keys(restoredProgress).length === 0) {
+      throw new Error(
+        "No matching topic progress was found in this backup."
+      );
+    }
+
+    const confirmed = window.confirm(
+      "Import this backup and replace your current study progress?"
+    );
+
+    if (!confirmed) return;
+
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(restoredProgress));
+    window.alert("Backup imported successfully!");
+    window.location.reload();
+  } catch (error) {
+    window.alert("Import failed: " + error.message);
+  } finally {
+    event.target.value = "";
+  }
+});
+
+</script>
+
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .catch((error) => {
+        console.error("Service worker registration failed:", error);
+      });
+  });
+}
+</script>
+
+</body>
+</html>
+
+
+<head></head>
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Study Dashboard</title>
+
+    <style>
+       
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 32px 20px;
+  background: #0b1020;
+  color: #edf2ff;
+  font-family: Arial, sans-serif;
+}
+
+.dashboard {
+  max-width: 1050px;
+  margin: 0 auto;
+}
+
+.hero {
+  padding: 24px 0 30px;
+}
+
+.eyebrow {
+  color: #60a5fa;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 3px;
+}
+
+h1 {
+  margin: 12px 0;
+  font-size: clamp(30px, 5vw, 46px);
+}
+
+.subtitle {
+  color: #9caac5;
+  line-height: 1.6;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 38px;
+}
+
+.stat-card,
+.subject-card {
+  background: #141c30;
+  border: 1px solid #26334e;
+  border-radius: 16px;
+  padding: 22px;
+}
+
+.stat-label,
+.stat-note {
+  color: #9caac5;
+  font-size: 14px;
+}
+
+.stat-card h2 {
+  color: #60a5fa;
+  font-size: 30px;
+  margin: 12px 0;
+}
+
+.section-title {
+  margin-bottom: 18px;
+  font-size: 24px;
+}
+
+.subject-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.subject-card {
+  transition: transform 0.2s, border-color 0.2s;
+}
+
+.subject-card:hover {
+  transform: translateY(-3px);
+  border-color: #60a5fa;
+}
+
+.subject-number {
+  color: #60a5fa;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+.subject-card h3 {
+  line-height: 1.4;
+  margin: 14px 0 8px;
+}
+
+.subject-card p {
+  color: #9caac5;
+  line-height: 1.6;
+}
+
+.subject-card label {
+  display: block;
+  margin-top: 18px;
+  font-size: 13px;
+  color: #c7d2e8;
+}
+
+input[type="checkbox"] {
+  accent-color: #34d399;
+  margin-right: 8px;
+}
+
+.footer {
+  color: #71809e;
+  text-align: center;
+  padding: 36px 0 10px;
+  font-size: 13px;
+}
+
+@media (max-width: 650px) {
+  body {
+    padding: 18px 14px;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+  }
+
+  .subject-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.progress-overview {
+  background: #141c30;
+  border: 1px solid #26334e;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 36px;
+}
+
+.progress-overview h2 {
+  margin-top: 0;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  margin: 14px 0 10px;
+}
+
+.progress-info strong {
+  color: #60a5fa;
+}
+
+.progress-track {
+  width: 100%;
+  height: 9px;
+  overflow: hidden;
+  background: #26334e;
+  border-radius: 99px;
+}
+
+.progress-fill {
+  width: 0%;
+  height: 100%;
+  background: #34d399;
+  border-radius: 99px;
+  transition: width 0.25s ease;
+}
+
+#progress-summary {
+  color: #9caac5;
+  font-size: 13px;
+  margin-bottom: 0;
+}
+
+.subject-progress {
+  margin-top: 18px;
+}
+
+.subject-progress .progress-info {
+  margin-top: 0;
+}
+
+.topic-list {
+  margin-top: 18px;
+}
+
+.unit-title {
+  color: #60a5fa;
+  font-size: 12px;
+  font-weight: bold;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 20px 0 8px;
+}
+
+.topic-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 9px 0;
+  color: #c7d2e8;
+  line-height: 1.5;
+  border-bottom: 1px solid #26334e;
+}
+
+.topic-item input {
+  accent-color: #34d399;
+  flex-shrink: 0;
+  margin-top: 4px;
+}
+
+.topic-item.done span {
+  text-decoration: line-through;
+  color: #71809e;
+}
+
+.subject-progress {
+  margin-top: 18px;
+}
+
+.subject-progress .progress-info {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.subject-progress strong {
+  color: #60a5fa;
+}
+
+.subject-card h3 {
+  line-height: 1.4;
+}
+
+.subject-card .subject-code {
+  color: #9caac5;
+  font-size: 12px;
+  margin-top: 5px;
+}
+.tracker-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 20px 0 28px;
+}
+
+#topic-search {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 13px 15px;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  background: #111827;
+  color: #f8fafc;
+  font-size: 15px;
+}
+
+#topic-search:focus {
+  outline: 2px solid #38bdf8;
+  outline-offset: 2px;
+}
+
+.control-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.control-buttons button {
+  padding: 10px 14px;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  background: #1e293b;
+  color: #f8fafc;
+  cursor: pointer;
+}
+
+.control-buttons button:hover {
+  background: #334155;
+}
+
+.control-buttons .danger-button {
+  background: #7f1d1d;
+  border-color: #991b1b;
+}
+    </style>
+</head>
